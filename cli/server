@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+show_help() {
+  cat <<EOF
+
+  Server CLI — bootstrap and manage remote servers
+
+  Usage:
+    server <command> <host>
+
+  Commands:
+    bootstrap   Install base packages, Docker, Zsh and create project structure
+
+  Examples:
+    server bootstrap root@192.168.1.10
+    server bootstrap deploy@myserver.com
+
+EOF
+}
+
+if [ "$#" -lt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  show_help
+  exit 0
+fi
+
+if [ "$#" -ne 2 ]; then
+  echo "Error: expected 2 arguments, got $#"
+  echo "Run 'server --help' for usage"
+  exit 1
+fi
+
+HOST=$2
+
+case "$1" in
+bootstrap)
+  echo "Bootstrapping server..."
+
+  ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/server-setup.sh"
+  ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/init-structure.sh"
+
+  echo "Server ready"
+  ;;
+
+*)
+  echo "Error: unknown command '$1'"
+  echo "Run 'server --help' for usage"
+  exit 1
+  ;;
+esac
