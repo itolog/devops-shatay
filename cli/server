@@ -3,6 +3,29 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROGRAM_NAME="$(basename "$0")"
+
+readonly COLOR_BLUE='\033[0;34m'
+readonly COLOR_GREEN='\033[0;32m'
+readonly COLOR_YELLOW='\033[1;33m'
+readonly COLOR_RED='\033[0;31m'
+readonly COLOR_NC='\033[0m'
+
+info() {
+  printf "${COLOR_BLUE}==>${COLOR_NC} %s\n" "$1"
+}
+
+step() {
+  printf "${COLOR_YELLOW}-->${COLOR_NC} %s\n" "$1"
+}
+
+success() {
+  printf "${COLOR_GREEN}✔${COLOR_NC} %s\n" "$1"
+}
+
+error_msg() {
+  printf "${COLOR_RED}✖${COLOR_NC} %s\n" "$1" >&2
+}
 
 show_help() {
   cat <<EOF
@@ -10,14 +33,18 @@ show_help() {
   Server CLI — bootstrap and manage remote servers
 
   Usage:
-    server <command> <host>
+    $PROGRAM_NAME <command> [args]
 
   Commands:
     bootstrap   Install base packages, Docker, Zsh and create project structure
 
   Examples:
-    server bootstrap root@192.168.1.10
-    server bootstrap deploy@myserver.com
+    $PROGRAM_NAME bootstrap root@192.168.1.10
+    $PROGRAM_NAME bootstrap deploy@myserver.com
+
+  Exit codes:
+    0  success
+    1  invalid usage or command error
 
 EOF
 }
@@ -27,27 +54,29 @@ if [ "$#" -lt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   exit 0
 fi
 
-if [ "$#" -ne 2 ]; then
-  echo "Error: expected 2 arguments, got $#"
-  echo "Run 'server --help' for usage"
-  exit 1
-fi
-
-HOST=$2
-
 case "$1" in
 bootstrap)
-  echo "Bootstrapping server..."
+  if [ "$#" -ne 2 ]; then
+    error_msg "bootstrap expects exactly 1 argument: <host>"
+    error_msg "Run '$PROGRAM_NAME --help' for usage"
+    exit 1
+  fi
 
+  HOST=$2
+
+  info "Bootstrapping server: $HOST"
+  step "Step 1/2: base setup"
   ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/server-setup.sh"
+
+  step "Step 2/2: initialize server structure"
   ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/init-structure.sh"
 
-  echo "Server ready"
+  success "Server ready"
   ;;
 
 *)
-  echo "Error: unknown command '$1'"
-  echo "Run 'server --help' for usage"
+  error_msg "unknown command '$1'"
+  error_msg "Run '$PROGRAM_NAME --help' for usage"
   exit 1
   ;;
 esac
