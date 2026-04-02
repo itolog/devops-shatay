@@ -65,11 +65,14 @@ bootstrap)
   HOST=$2
 
   info "Bootstrapping server: $HOST"
-  step "Step 1/2: base setup"
+  step "Step 1/3: base setup"
   ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/server-setup.sh"
 
-  step "Step 2/2: initialize server structure"
+  step "Step 2/3: initialize server structure"
   ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/init-structure.sh"
+
+  step "Step 3/3: install server-cli"
+  rsync -av --delete -e "ssh -o ControlMaster=no" "$PROJECT_ROOT/server-cli/" "$HOST:/srv/server-cli/"
 
   success "Server ready"
   ;;
