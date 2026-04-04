@@ -6,4 +6,4 @@ BASE_DIR="${BASE_DIR:-/srv}"
 mkdir -p "$BASE_DIR"/{apps,infra,caddy,logs,backups}
 
 echo "Server structure created:"
-tree "$BASE_DIR" || ls "$BASE_DIR"
+tree -d -L 2 "$BASE_DIR" || ls -1 "$BASE_DIR"

@@ -4,7 +4,7 @@ set -euo pipefail
 trap 'echo -e "\n❌ Script failed at line $LINENO"' ERR
 
 export DEBIAN_FRONTEND=noninteractive
-
+readonly NODE_LTS_MAJOR="${NODE_LTS_MAJOR:-24}"
 # -----------------------------------------------------------------------------
 # ANSI Colors
 # -----------------------------------------------------------------------------
@@ -175,6 +175,29 @@ else
 fi
 
 # --------------------------------------------------
+# Node.js LTS installation / upgrade
+# --------------------------------------------------
+
+log "Installing Node.js LTS"
+
+if command -v node >/dev/null 2>&1; then
+  CURRENT_NODE_MAJOR=$(node -v | sed 's/^v//' | cut -d. -f1)
+
+  if [[ "$CURRENT_NODE_MAJOR" -eq "$NODE_LTS_MAJOR" ]]; then
+    warn "Node.js LTS already installed: $(node -v)"
+  else
+    warn "Node.js $(node -v) detected, upgrading to LTS v$NODE_LTS_MAJOR"
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_LTS_MAJOR}.x" | bash -
+    apt-get install -y nodejs
+    done_msg "Node.js upgraded to $(node -v)"
+  fi
+else
+  curl -fsSL "https://deb.nodesource.com/setup_${NODE_LTS_MAJOR}.x" | bash -
+  apt-get install -y nodejs
+  done_msg "Node.js LTS installed: $(node -v)"
+fi
+
+# --------------------------------------------------
 # verification
 # --------------------------------------------------
 
@@ -184,6 +207,8 @@ done_msg "Docker:  $(docker --version 2>/dev/null || echo 'not installed')"
 done_msg "Compose: $(docker compose version 2>/dev/null || echo 'not installed')"
 done_msg "Zsh:     $(zsh --version)"
 done_msg "Git:     $(git --version)"
+done_msg "Node:    $(node -v 2>/dev/null || echo 'not installed')"
+done_msg "NPM:     $(npm -v 2>/dev/null || echo 'not installed')"
 
 # --------------------------------------------------
 
