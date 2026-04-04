@@ -5,7 +5,6 @@ trap 'echo -e "\n❌ Script failed at line $LINENO"' ERR
 
 export DEBIAN_FRONTEND=noninteractive
 
-
 # -----------------------------------------------------------------------------
 # ANSI Colors
 # -----------------------------------------------------------------------------
@@ -82,6 +81,9 @@ readonly BASE_PACKAGES=(
   ca-certificates
   gnupg
   tree
+  build-essential
+  unzip
+  htop
 )
 
 MISSING_PACKAGES=()
@@ -95,7 +97,7 @@ for pkg in "${BASE_PACKAGES[@]}"; do
 done
 
 if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
-  apt-get install -y "${MISSING_PACKAGES[@]}"
+  apt-get install -y --no-install-recommends "${MISSING_PACKAGES[@]}"
   done_msg "Base packages installed"
 else
   warn "All base packages already installed"

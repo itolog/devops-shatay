@@ -72,7 +72,7 @@ bootstrap)
   ssh "$HOST" 'bash -s' <"$PROJECT_ROOT/bootstrap/init-structure.sh"
 
   step "Step 3/3: install server-cli"
-  rsync -av --delete -e "ssh -o ControlMaster=no" "$PROJECT_ROOT/server-cli/" "$HOST:/srv/server-cli/"
+  rsync -av --delete "$PROJECT_ROOT/server-cli/" "$HOST:/srv/server-cli/"
 
   success "Server ready"
   ;;
